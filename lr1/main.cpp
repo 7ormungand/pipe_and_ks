@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <vector>
 #include <fstream>
 
 
@@ -9,7 +8,6 @@ struct Pipe {
     double length = 0;
     int d = 0;
     bool work = false;
-    bool alive = false;
 };
 
 struct Cs {
@@ -17,7 +15,6 @@ struct Cs {
     int c_shop = 0;
     int c_shop_w = 0;
     char cl = 'E';
-    bool alive = false;
 };
 
 
@@ -44,7 +41,9 @@ void pause() {
 void add_pipe(Pipe& pipe) {
     std::cout << "      Добавление трубы\n";
     std::cout << "Введите километровую отметку (название): ";
-    std::getline(std::cin, pipe.name);
+    while (!(std::getline(std::cin, pipe.name)) || pipe.name.length() < 1) {
+        std::cout << "Некорректная длина. Повторите ввод: ";
+    }
 
     std::cout << "Введите длину (км): ";
     while (!(std::cin >> pipe.length) || pipe.length <= 0) {
@@ -58,14 +57,13 @@ void add_pipe(Pipe& pipe) {
         clear_input();
     }
     pipe.work = true;
-    pipe.alive = true;
     clear_input();
     std::cout << "Труба добавлена!\n";
 }
 
 
 void print_pipe(const Pipe& pipe) {
-    if (!pipe.alive) {
+    if (pipe.d == 0) {
         std::cout << "Труба ещё не создана\n";
         return;
     }
@@ -78,7 +76,7 @@ void print_pipe(const Pipe& pipe) {
 
 
 void edit_pipe(Pipe& pipe) {
-    if (!pipe.alive) {
+    if (pipe.d == 0) {
         std::cout << "Ошибка: труба не создана!\n";
         return;
     }
@@ -90,7 +88,9 @@ void edit_pipe(Pipe& pipe) {
 void add_cs(Cs& cs) {
     std::cout << "      Добавление КС\n";
     std::cout << "Введите название КС: ";
-    std::getline(std::cin, cs.name);
+    while (!(std::getline(std::cin, cs.name)) || cs.name.length() < 1) {
+        std::cout << "Некорректная длина. Повторите ввод: ";
+    }
 
     std::cout << "Введите общее количество цехов: ";
     while (!(std::cin >> cs.c_shop) || cs.c_shop <= 0) {
@@ -118,15 +118,13 @@ void add_cs(Cs& cs) {
         std::cout << "Некорректный класс! Введите одну из букв (A, B, C, D, E): ";
         clear_input();
     }
-
-    cs.alive = true;
-    clear_input();
+    clear_input();//!!!
     std::cout << "КС добавлена!\n";
 }
 
 
 void print_cs(const Cs& cs) {
-    if (!cs.alive) {
+    if (cs.c_shop == 0) {
         std::cout << "\nКС ещё не создана\n";
         return;
     }
@@ -139,7 +137,7 @@ void print_cs(const Cs& cs) {
 
 
 void edit_cs(Cs& cs) {
-    if (!cs.alive) {
+    if (cs.c_shop == 0) {
         std::cout << "Ошибка: КС не создана!\n";
         return;
     }
@@ -176,22 +174,53 @@ void edit_cs(Cs& cs) {
     }
 }
 
+void save_pipe(std::ofstream& out, const Pipe& pipe) {
+    bool has_pipe = (pipe.d > 0);
+    out << has_pipe << "\n";
+    if (has_pipe) {
+        out << pipe.name << "\n" << pipe.length << "\n" << pipe.d << "\n" << pipe.work << "\n";
+    }
+}
+
+void save_cs(std::ofstream& out, const Cs& cs) {
+    bool has_cs = (cs.c_shop > 0);
+    out << has_cs << "\n";
+    if (has_cs) {
+        out << cs.name << "\n" << cs.c_shop << "\n" << cs.c_shop_w << "\n" << cs.cl << "\n";
+    }
+}
+
 void save_f(const Pipe& pipe, const Cs& cs) {
     std::ofstream out("p_cs.txt");
     if (!out.is_open()) {
         std::cout << "Ошибка открытия файла!\n";
         return;
     }
-    out << pipe.alive << "\n";
-    if (pipe.alive) {
-        out << pipe.name << "\n" << pipe.length << "\n" << pipe.d << "\n" << pipe.work << "\n";
-    }
-
-    out << cs.alive << "\n";
-    if (cs.alive) {
-        out << cs.name << "\n" << cs.c_shop << "\n" << cs.c_shop_w << "\n" << cs.cl << "\n";
-    }
+    save_pipe(out, pipe);
+    save_cs(out, cs);
     std::cout << "Данные трубы и КС сохранены в файл\n";
+}
+
+void load_pipe(std::ifstream& in, Pipe& pipe) {
+    bool has_pipe = false;
+    in >> has_pipe;
+    if (has_pipe) {
+        in.ignore();
+        std::getline(in, pipe.name);
+        in >> pipe.length >> pipe.d >> pipe.work;
+    } else {
+        pipe = Pipe();
+    }
+}
+
+void load_cs(std::ifstream& in, Cs& cs) {
+    bool has_cs = false;
+    in >> has_cs;
+    if (has_cs) {
+        in.ignore();
+        std::getline(in, cs.name);
+        in >> cs.c_shop >> cs.c_shop_w >> cs.cl;
+    }
 }
 
 void load_f(Pipe& pipe, Cs& cs) {
@@ -200,19 +229,8 @@ void load_f(Pipe& pipe, Cs& cs) {
         std::cout << "Файла 'p_cs.txt' с данными не найден!";
         return;
     }
-    in >> pipe.alive;
-    if (pipe.alive) {
-        in.ignore();
-        std::getline(in, pipe.name);
-        in >> pipe.length >> pipe.d >> pipe.work;
-    }
-
-    in >> cs.alive;
-    if (cs.alive) {
-        in.ignore();
-        std::getline(in, cs.name);
-        in >> cs.c_shop >> cs.c_shop_w >> cs.cl;
-    }
+    load_pipe(in, pipe);
+    load_cs(in, cs);
     std::cout << "Данные загружены из p_cs.txt!\n";
 }
 
@@ -250,44 +268,37 @@ int main() {
             case 1: {
                 clear_screen();
                 add_pipe(pipe);
-                pause();
                 break;
             }
             case 2: {
                 clear_screen();
                 add_cs(cs);
-                pause();
                 break;
             }
             case 3: {
                 clear_screen();
                 print_pipe(pipe); 
                 print_cs(cs); 
-                pause();
                 break;
             }
             case 4: {
                 clear_screen();
                 edit_pipe(pipe);
-                pause();
                 break;
             }
             case 5: {
                 clear_screen();
                 edit_cs(cs);
-                pause();
                 break;
             }
             case 6: {
                 clear_screen();
                 save_f(pipe, cs);
-                pause();
                 break;
             }
             case 7: {
                 clear_screen();
                 load_f(pipe, cs);
-                pause();
                 break;
             }
             case 0: {
@@ -296,9 +307,9 @@ int main() {
             }
             default:{
                 std::cout << "Неверный пункт меню. Попробуйте снова.\n";
-                pause();
                 break;
             }
         }
+        pause();
     }
 }
