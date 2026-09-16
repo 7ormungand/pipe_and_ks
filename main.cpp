@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 
 
 struct Pipe {
@@ -15,7 +16,6 @@ struct Cs {
     std::string name = "";
     int c_shop = 0;
     int c_shop_w = 0;
-    bool work = false;
     char cl = 'E';
     bool alive = false;
 };
@@ -176,6 +176,47 @@ void edit_cs(Cs& cs) {
     }
 }
 
+void save_f(const Pipe& pipe, const Cs& cs) {
+    std::ofstream out("p_cs.txt");
+    if (!out.is_open()) {
+        std::cout << "Ошибка открытия файла!\n";
+        return;
+    }
+    out << pipe.alive << "\n";
+    if (pipe.alive) {
+        out << pipe.name << "\n" << pipe.length << "\n" << pipe.d << "\n" << pipe.work << "\n";
+    }
+
+    out << cs.alive << "\n";
+    if (cs.alive) {
+        out << cs.name << "\n" << cs.c_shop << "\n" << cs.c_shop_w << "\n" << cs.cl << "\n";
+    }
+    std::cout << "Данные трубы и КС сохранены в файл\n";
+}
+
+void load_f(Pipe& pipe, Cs& cs) {
+    std::ifstream in("p_cs.txt");
+    if (!in.is_open()) {
+        std::cout << "Файла 'p_cs.txt' с данными не найден!";
+        return;
+    }
+    in >> pipe.alive;
+    if (pipe.alive) {
+        in.ignore();
+        std::getline(in, pipe.name);
+        in >> pipe.length >> pipe.d >> pipe.work;
+    }
+
+    in >> cs.alive;
+    if (cs.alive) {
+        in.ignore();
+        std::getline(in, cs.name);
+        in >> cs.c_shop >> cs.c_shop_w >> cs.cl;
+    }
+    std::cout << "Данные загружены из p_cs.txt!\n";
+}
+
+
 
 int main() {
     setlocale(LC_ALL, "ru-RU.UTF-8");
@@ -185,7 +226,7 @@ int main() {
 
     while (true) {
         clear_screen();
-        std::cout << "\n        Меню\n";
+        std::cout << "\n     Меню\n";
         std::cout << "1. Добавить трубу\n";
         std::cout << "2. Добавить КС\n";
         std::cout << "3. Просмотр всех объектов\n";
@@ -237,8 +278,18 @@ int main() {
                 pause();
                 break;
             }
-            // case 6: {}
-            // case 7: {}
+            case 6: {
+                clear_screen();
+                save_f(pipe, cs);
+                pause();
+                break;
+            }
+            case 7: {
+                clear_screen();
+                load_f(pipe, cs);
+                pause();
+                break;
+            }
             case 0: {
                 std::cout << "Завершение работы программы\n";
                 return 0;
