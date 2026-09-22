@@ -46,13 +46,13 @@ void add_pipe(Pipe& pipe) {
     }
 
     std::cout << "Введите длину (км): ";
-    while (!(std::cin >> pipe.length) || pipe.length <= 0 || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
+    while (!(std::cin >> pipe.length) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || pipe.length <= 0) {
         std::cout << "Некорректная длина. Повторите ввод: ";
         clear_input();
     }
 
     std::cout << "Введите диаметр (мм): ";
-    while (!(std::cin >> pipe.d) || pipe.d <= 0 || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
+    while (!(std::cin >> pipe.d) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || pipe.d <= 0) {
         std::cout << "Некорректный диаметр. Повторите ввод: ";
         clear_input();
     }
@@ -93,13 +93,13 @@ void add_cs(Cs& cs) {
     }
 
     std::cout << "Введите общее количество цехов: ";
-    while (!(std::cin >> cs.c_shop) || cs.c_shop <= 0 || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
+    while (!(std::cin >> cs.c_shop) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || cs.c_shop <= 0) {
         std::cout << "Количество цехов должно быть > 0. Повторите: ";
         clear_input();
     }
 
     std::cout << "Введите количество цехов в работе: ";
-    while (!(std::cin >> cs.c_shop_w) || cs.c_shop_w < 0 || cs.c_shop_w > cs.c_shop || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
+    while (!(std::cin >> cs.c_shop_w) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || cs.c_shop_w > cs.c_shop || cs.c_shop_w < 0) {
         std::cout << "Цехов в работе не может быть больше, чем всего (" << cs.c_shop << "). Повторите: ";
         clear_input();
     }
@@ -147,10 +147,9 @@ void edit_cs(Cs& cs) {
     std::cout << "Выберите действие: ";
 
     int choice;
-    if (!(std::cin >> choice)) {
+    while (!(std::cin >> choice) || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
         clear_input();
-        std::cout << "Неверно!\n";
-        return;
+        std::cout << "Некорректный ввод. Повторите: ";
     }
 
     clear_screen();
