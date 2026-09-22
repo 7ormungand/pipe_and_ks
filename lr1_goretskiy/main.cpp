@@ -46,13 +46,13 @@ void add_pipe(Pipe& pipe) {
     }
 
     std::cout << "Введите длину (км): ";
-    while (!(std::cin >> pipe.length) || pipe.length <= 0) {
+    while (!(std::cin >> pipe.length) || pipe.length <= 0 || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
         std::cout << "Некорректная длина. Повторите ввод: ";
         clear_input();
     }
 
     std::cout << "Введите диаметр (мм): ";
-    while (!(std::cin >> pipe.d) || pipe.d <= 0) {
+    while (!(std::cin >> pipe.d) || pipe.d <= 0 || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
         std::cout << "Некорректный диаметр. Повторите ввод: ";
         clear_input();
     }
@@ -93,13 +93,13 @@ void add_cs(Cs& cs) {
     }
 
     std::cout << "Введите общее количество цехов: ";
-    while (!(std::cin >> cs.c_shop) || cs.c_shop <= 0) {
-        std::cout << "Количество цехов должно быть > 0. Повторите:";
+    while (!(std::cin >> cs.c_shop) || cs.c_shop <= 0 || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
+        std::cout << "Количество цехов должно быть > 0. Повторите: ";
         clear_input();
     }
 
     std::cout << "Введите количество цехов в работе: ";
-    while (!(std::cin >> cs.c_shop_w) || cs.c_shop_w < 0 || cs.c_shop_w > cs.c_shop) {
+    while (!(std::cin >> cs.c_shop_w) || cs.c_shop_w < 0 || cs.c_shop_w > cs.c_shop || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
         std::cout << "Цехов в работе не может быть больше, чем всего (" << cs.c_shop << "). Повторите: ";
         clear_input();
     }
