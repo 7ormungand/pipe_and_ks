@@ -147,9 +147,9 @@ void edit_cs(Cs& cs) {
     std::cout << "Выберите действие: ";
 
     int choice;
-    while (!(std::cin >> choice) || (std::cin.peek() != '\n' && std::cin.peek() != EOF)) {
+    while (!(std::cin >> choice) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || (choice != 1 && choice != 2)) {
         clear_input();
-        std::cout << "Некорректный ввод. Повторите: ";
+        std::cout << "Некорректный ввод. Введите 1 или 2: ";
     }
 
     clear_screen();
@@ -168,8 +168,6 @@ void edit_cs(Cs& cs) {
         } else {
             std::cout << "Все цеха уже остановлены!\n";
         }
-    } else {
-            std::cout << "Неверно!\n";
     }
 }
 
