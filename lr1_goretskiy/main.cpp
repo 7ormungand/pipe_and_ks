@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <unordered_map>
 
 
 void clear_input() {
@@ -20,6 +21,14 @@ void clear_screen() {
 void pause() {
     std::cout << "\nНажмите Enter, чтобы продолжить...";
     std::cin.get();
+}
+
+
+void log_action(const std::string& action) {
+    std::ofstream log_file("log.txt", std::ios::app);
+    if (log_file.is_open()) {
+        log_file << action << "\n";
+    }
 }
 
 
@@ -53,7 +62,7 @@ class Pipe {
             std::cout << "Труба добавлена!\n";
         }
 
-        void print_p() {
+        void print_p() const {
             if (d == 0) {
                 return;
             }
@@ -64,34 +73,32 @@ class Pipe {
             std::cout << "Статус: " << (work ? "В работе" : "В ремонте" ) << "\n";
         }
 
-        void edit_p() {
-            if (d == 0) {
-                std::cout << "Ошибка: труба не создана!\n";
-                return;
-            }
-            work = !work;
-            std::cout << "Статус: '" << (!work ? "В работе" : "В ремонте") << "' заменён на: " << (work ? "В работе" : "В ремонте") << "\n";
-        }
-
         void save_p(std::ofstream& out) const {
-            bool has_pipe = (d > 0);
-            out << has_pipe << "\n";
-            if (has_pipe) {
-                out << name << "\n" << length << "\n" << d << "\n" << work << "\n";
-            }
+            out << name << "\n" << length << "\n" << d << "\n" << work << "\n";
         }
 
         void load_pipe(std::ifstream& in) {
-            bool has_pipe = false;
-            in >> has_pipe;
-            if (has_pipe) {
-                in.ignore();
-                std::getline(in, name);
-                in >> length >> d >>work;
-            } else {
-                *this = Pipe();
-            }
+            in.ignore();
+            std::getline(in, name);
+            in >> length >> d >> work;
+        
         }
+
+        std::string get_name() const {
+            return name;
+        }
+        bool is_in_repair() const {
+            return !work;
+        }
+
+        void edit_p() {
+            work = !work;
+        }
+
+        void set_work(bool status) {
+            work = status;
+        }
+    
 };
 
 class Cs {
@@ -138,7 +145,7 @@ class Cs {
             std::cout << "КС добавлена!\n";
         }
 
-        void print_cs() {
+        void print_cs() const {
             if (c_shop == 0) {
                 return;
             }
@@ -147,13 +154,10 @@ class Cs {
             std::cout << "Всего цехов: " << c_shop << "\n";
             std::cout << "Цехов в работе: " << c_shop_w << "\n";
             std::cout << "Класс станции: " << cl << "\n";
+            std::cout << "Процент неработающих цехов: " << get_percentage() << "%\n";
         }
 
         void edit_cs() {
-            if (c_shop == 0) {
-                std::cout << "Ошибка: КС не создана!\n";
-                return;
-            }
             std::cout << "\nРедактирование КС:\n";
             std::cout << "1. Запустить цех\n";
             std::cout << "2. Остановить цех\n";
@@ -185,50 +189,97 @@ class Cs {
         }
 
         void save_cs(std::ofstream& out) const {
-            bool has_cs = (c_shop > 0);
-            out << has_cs << "\n";
-            if (has_cs) {
-                out << name << "\n" << c_shop << "\n" << c_shop_w << "\n" << cl << "\n";
-            }
+            out << name << "\n" << c_shop << "\n" << c_shop_w << "\n" << cl << "\n";
         }
 
         void load_cs(std::ifstream& in) {
-            bool has_cs = false;
-            in >> has_cs;
-            if (has_cs) {
-                in.ignore();
-                std::getline(in, name);
-                in >> c_shop >> c_shop_w >> cl;
-            } else {
-                *this = Cs();
+            in.ignore();
+            std::getline(in, name);
+            in >> c_shop >> c_shop_w >> cl;
+            
+        }
+
+        std::string get_name() const {
+            return name;
+        }
+
+        double get_percentage() const {
+            if (c_shop == 0) {
+                return 0.0;
             }
+            return ((double)(c_shop - c_shop_w) / c_shop) * 100.0;
         }
 };
 
 
-void save_f(const Pipe& pipe, const Cs& cs) {
-    std::ofstream out("p_cs.txt");
+void save_f(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, Cs>& css) {
+   std::cout << "Введите имя файла для сохранения: ";
+   std::string filename;
+   std::getline(std::cin, filename);
+   
+    std::ofstream out(filename);
     if (!out.is_open()) {
         std::cout << "Ошибка открытия файла!\n";
         return;
     }
-    pipe.save_p(out);
-    cs.save_cs(out);
-    std::cout << "Данные трубы и КС сохранены в файл\n";
+    out << pipes.size() << "\n";
+    for (const auto& [id, pipe] : pipes) {
+        out << id << "\n";
+        pipe.save_p(out);
+    }
+    out << css.size() << "\n";
+    for (const auto& [id, cs] : css) {
+        out << id << "\n";
+        cs.save_cs(out);
+    }
+    log_action("Сохранение данных в файл: " + filename);
+    std::cout << "Все данные успешно сохранены в файл: " << filename << "\n";
 }
 
 
-void load_f(Pipe& pipe, Cs& cs) {
-    std::ifstream in("p_cs.txt");
+void load_f(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, Cs>& css) {
+    std::cout << "Введите имя файла для сохранения: ";
+    std::string filename;
+    std::getline(std::cin, filename);
+
+    std::ifstream in(filename);
     if (!in.is_open()) {
-        std::cout << "Файла 'p_cs.txt' с данными не найден!";
+        std::cout << "Файл '" << filename << "' с данными не найден!";
         return;
     }
-    pipe.load_pipe(in);
-    cs.load_cs(in);
-    std::cout << "Данные загружены из p_cs.txt!\n";
+    pipes.clear();
+    css.clear();
+
+    size_t count_pipes = 0;
+    if (in >> count_pipes) {
+        for (size_t i = 0; i < count_pipes; ++i) {
+            int id;
+            in >> id;
+            Pipe p;
+            p.load_pipe(in);
+            pipes[id] = p;
+        }
+    }
+
+    size_t count_css = 0;
+    if (in >> count_css) {
+        for (size_t i = 0; i < count_css; ++i) {
+            int id;
+            in >> id;
+            Cs cs;
+            cs.load_cs(in);
+            css[id] = cs;
+        }
+    }
+    log_action("Загрузка данных из файла: " + filename);
+    std::cout << "Данные успешно загружены из "<< filename << "!\n";
 }
 
+
+std::unordered_map<int, Pipe> pipe_data;
+std::unordered_map<int, Cs> cs_data;
+int num_pipe = 0;
+int num_cs = 0;
 
 int main() {
     setlocale(LC_ALL, "ru-RU.UTF-8");
@@ -261,43 +312,69 @@ int main() {
         switch (choice) {
             case 1: {
                 clear_screen();
-                pipe.add_p();
+                Pipe p;
+                p.add_p();
+                pipe_data[++num_pipe] = p;
+                log_action("Добавлена труба с ID: " + std::to_string(num_pipe));
                 break;
             }
             case 2: {
                 clear_screen();
+                Cs cs;
                 cs.add_cs();
+                cs_data[++num_cs] = cs;
+                log_action("Добавлена КС с ID: " + std::to_string(num_cs));
                 break;
             }
             case 3: {
                 clear_screen();
-                std::cout << "\n    Труба    \n";
-                pipe.print_p(); 
+                std::cout << "\n    Трубы    \n";
+                if (pipe_data.empty()) {
+                    std::cout << "Труб пока нет.\n";
+                } else {
+                    for (const auto& pair : pipe_data) {
+                        std::cout << "ID: " << pair.first << "\n";
+                        pair.second.print_p();
+                        std::cout << "------------------\n";
+                    }
+                }
                 std::cout << "\n    КС    \n";
-                cs.print_cs(); 
+                if (cs_data.empty()) {
+                    std::cout << "Труб пока нет.\n";
+                } else {
+                    for (const auto& pair : cs_data) {
+                        std::cout << "ID: " << pair.first << "\n";
+                        pair.second.print_cs();
+                        std::cout << "------------------\n";
+                    }
+                }
+                log_action("Просмотр всех объектов");
                 break;
             }
             case 4: {
-                clear_screen();
-                pipe.edit_p();
                 break;
             }
             case 5: {
-                clear_screen();
-                cs.edit_cs();
                 break;
             }
             case 6: {
                 clear_screen();
-                save_f(pipe, cs);
+                save_f(pipe_data, cs_data);
                 break;
             }
             case 7: {
                 clear_screen();
-                load_f(pipe, cs);
+                load_f(pipe_data, cs_data);
+                for (auto pair : pipe_data) {
+                    if (pair.first >= num_pipe) {num_pipe = pair.first + 1;}
+                }
+                for (auto pair : cs_data) {
+                    if (pair.first >= num_cs) {num_cs = pair.first + 1;}
+                }
                 break;
             }
             case 0: {
+                log_action("Завершение работы программы");
                 std::cout << "Завершение работы программы\n";
                 return 0;
             }
