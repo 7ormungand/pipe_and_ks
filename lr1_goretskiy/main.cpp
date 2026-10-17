@@ -6,11 +6,12 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "clear_in.hpp"
+#include "pipe.hpp"
+#include "cs_station.hpp"
 
-void clear_input() {
-    std::cin.clear();
-    std::cin.ignore(10000, '\n');
-}
+
+
 
 void clear_screen() {
     #ifdef _WIN32
@@ -58,172 +59,6 @@ bool search_case(const std::string& str, const std::string& substr) {
     return false;
 }
 
-
-class Pipe {
-    private:
-        std::string name = "";
-        double length = 0;
-        int d = 0;
-        bool work = false;
-    public:
-        void add_p() {
-            std::cout << "      Добавление трубы\n";
-            std::cout << "Введите километровую отметку (название): ";
-            while (!(std::getline(std::cin, name)) || name.empty()) {
-                std::cout << "Некорректная длина. Повторите ввод: ";
-            }
-
-            std::cout << "Введите длину (км): ";
-            while (!(std::cin >> length) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || length <= 0) {
-                std::cout << "Некорректно. Повторите ввод: ";
-                clear_input();
-            }
-
-            std::cout << "Введите диаметр (мм): ";
-            while (!(std::cin >> d) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || d <= 0) {
-                std::cout << "Некорректно. Повторите ввод: ";
-                clear_input();
-            }
-            work = true;
-            clear_input();
-            std::cout << "Труба добавлена!\n";
-        }
-
-        void print() const {
-            if (d == 0) {
-                return;
-            }
-            
-            std::cout << "Название (км отметка): " << (name.empty() ? "(пусто)" : name) << "\n";
-            std::cout << "Длина: " << length << "\n";
-            std::cout << "Диаметр: " << d << "\n";
-            std::cout << "Статус: " << (work ? "В работе" : "В ремонте" ) << "\n";
-        }
-
-        void save_p(std::ofstream& out) const {
-            out << name << "\n" << length << "\n" << d << "\n" << work << "\n";
-        }
-
-        void load_pipe(std::ifstream& in) {
-            in.ignore();
-            std::getline(in, name);
-            in >> length >> d >> work;
-        
-        }
-
-        std::string get_name() const {
-            return name;
-        }
-        bool is_in_repair() const {
-            return !work;
-        }
-
-        void edit_p() {
-            work = !work;
-        }
-
-        void set_work(bool status) {
-            work = status;
-        }
-    
-};
-
-class Cs {
-    private:
-        std::string name = "";
-        int c_shop = 0;
-        int c_shop_w = 0;
-        char cl = 'E';
-    public:
-        void add_cs() {
-            std::cout << "      Добавление КС\n";
-            std::cout << "Введите название КС: ";
-            while (!(std::getline(std::cin, name)) || name.empty()) {
-                std::cout << "Некорректная длина. Повторите ввод: ";
-            }
-
-            std::cout << "Введите общее количество цехов: ";
-            while (!(std::cin >> c_shop) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || c_shop <= 0) {
-                std::cout << "Количество цехов должно быть > 0. Повторите: ";
-                clear_input();
-            }
-
-            std::cout << "Введите количество цехов в работе: ";
-            while (!(std::cin >> c_shop_w) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || c_shop_w > c_shop || c_shop_w < 0) {
-                std::cout << "Цехов в работе не может быть больше, чем всего (" << c_shop << "). Повторите: ";
-                clear_input();
-            }
-
-            std::string input_cl;
-            std::cout << "Введите Класс станции (A, B, C, D, E): ";
-            while (true) {
-                std::cin >> input_cl;
-                if (input_cl.length() == 1) {
-                    char c = toupper(input_cl[0]);
-                    if (c == 'A' || c == 'B' ||c == 'C' || c == 'D' || c == 'E') {
-                        cl = c;
-                        break;
-                    }
-                }
-                std::cout << "Некорректный класс! Введите одну из букв (A, B, C, D, E): ";
-                clear_input();
-            }
-            clear_input();//!!!
-            std::cout << "КС добавлена!\n";
-        }
-
-        void print() const {
-            if (c_shop == 0) {
-                return;
-            }
-        
-            std::cout << "Название: " << (name.empty() ? "(пусто)" : name) << "\n";
-            std::cout << "Всего цехов: " << c_shop << "\n";
-            std::cout << "Цехов в работе: " << c_shop_w << "\n";
-            std::cout << "Класс станции: " << cl << "\n";
-            std::cout << "Процент неработающих цехов: " << get_percentage() << "%\n";
-        }
-
-        void edit_cs(int choice) {
-            if (choice == 1) {
-                if (c_shop_w < c_shop) {
-                    c_shop_w++;
-                    std::cout << "Цех запущен. Цехов в работе: " << c_shop_w << "\n";
-                } else {
-                    std::cout << "Все цеха уже работают!\n";
-                }
-            } else if (choice == 2) {
-                if (c_shop_w > 0) {
-                    c_shop_w--;
-                    std::cout << "Цех остановлен. Цехов в работе: " << c_shop_w << "\n";
-                } else {
-                    std::cout << "Все цеха уже остановлены!\n";
-                }
-            }
-        }
-
-        void save_cs(std::ofstream& out) const {
-            out << name << "\n" << c_shop << "\n" << c_shop_w << "\n" << cl << "\n";
-        }
-
-        void load_cs(std::ifstream& in) {
-            in.ignore();
-            std::getline(in, name);
-            in >> c_shop >> c_shop_w >> cl;
-            
-        }
-
-        std::string get_name() const {
-            return name;
-        }
-
-        double get_percentage() const {
-            if (c_shop == 0) {
-                return 0.0;
-            }
-            return ((double)(c_shop - c_shop_w) / c_shop) * 100.0;
-        }
-};
 
 
 void save_f(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, Cs>& css) {
