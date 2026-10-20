@@ -6,11 +6,10 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "gts.hpp"
 #include "clear_in.hpp"
 #include "pipe.hpp"
 #include "cs_station.hpp"
-
-
 
 
 void clear_screen() {
@@ -60,69 +59,6 @@ bool search_case(const std::string& str, const std::string& substr) {
 }
 
 
-
-void save_f(const std::unordered_map<int, Pipe>& pipes, const std::unordered_map<int, Cs>& css) {
-   std::cout << "Введите имя файла для сохранения: ";
-   std::string filename;
-   std::getline(std::cin, filename);
-   
-    std::ofstream out(filename);
-    if (!out.is_open()) {
-        std::cout << "Ошибка открытия файла!\n";
-        return;
-    }
-    out << pipes.size() << "\n";
-    for (const auto& [id, pipe] : pipes) {
-        out << id << "\n";
-        pipe.save_p(out);
-    }
-    out << css.size() << "\n";
-    for (const auto& [id, cs] : css) {
-        out << id << "\n";
-        cs.save_cs(out);
-    }
-    log_action("Сохранение данных в файл: " + filename);
-    std::cout << "Все данные успешно сохранены в файл: " << filename << "\n";
-}
-
-
-void load_f(std::unordered_map<int, Pipe>& pipes, std::unordered_map<int, Cs>& css) {
-    std::cout << "Введите имя файла для загрузки: ";
-    std::string filename;
-    std::getline(std::cin, filename);
-
-    std::ifstream in(filename);
-    if (!in.is_open()) {
-        std::cout << "Файл '" << filename << "' с данными не найден!";
-        return;
-    }
-    pipes.clear();
-    css.clear();
-
-    size_t count_pipes = 0;
-    if (in >> count_pipes) {
-        for (size_t i = 0; i < count_pipes; ++i) {
-            int id;
-            in >> id;
-            Pipe p;
-            p.load_pipe(in);
-            pipes[id] = p;
-        }
-    }
-
-    size_t count_css = 0;
-    if (in >> count_css) {
-        for (size_t i = 0; i < count_css; ++i) {
-            int id;
-            in >> id;
-            Cs cs;
-            cs.load_cs(in);
-            css[id] = cs;
-        }
-    }
-    log_action("Загрузка данных из файла: " + filename);
-    std::cout << "Данные успешно загружены из "<< filename << "!\n";
-}
 
 template<typename T>
 std::vector<int> search_p(const std::unordered_map<int, T>& some_type) {
@@ -205,7 +141,7 @@ void edit_p_batch(std::unordered_map<int, T>& items) {
 
     std::cout << "\nПакетное действие со найденными объектами:\n";
     std::cout << "1. Применить редактирование / изменение статуса\n";
-    std::cout << "2. Удалить трубы\n";
+    std::cout << "2. Удалить\n";
     std::cout << "0. Отмена\n";
     std::cout << "Выберите действие: ";
 
@@ -301,17 +237,10 @@ void edit_p_batch(std::unordered_map<int, T>& items) {
     }
 } 
 
-
-std::unordered_map<int, Pipe> pipe_data;
-std::unordered_map<int, Cs> cs_data;
-int num_pipe = 0;
-int num_cs = 0;
-
 int main() {
     setlocale(LC_ALL, "ru-RU.UTF-8");
     
-    Pipe pipe;
-    Cs cs;
+    GTS gts;
 
     while (true) {
         clear_screen();
@@ -340,37 +269,37 @@ int main() {
                 clear_screen();
                 Pipe p;
                 p.add_p();
-                pipe_data[++num_pipe] = p;
-                log_action("Добавлена труба с ID: " + std::to_string(num_pipe));
+                gts.add_pipes(p);
+                log_action("Добавлена новая труба");
                 break;
             }
             case 2: {
                 clear_screen();
                 Cs cs;
                 cs.add_cs();
-                cs_data[++num_cs] = cs;
-                log_action("Добавлена КС с ID: " + std::to_string(num_cs));
+                gts.add_css(cs);
+                log_action("Добавлена новая КС");
                 break;
             }
             case 3: {
                 clear_screen();
                 std::cout << "\n    Трубы    \n";
-                if (pipe_data.empty()) {
+                if (gts.get_pipes().empty()) {
                     std::cout << "Труб пока нет.\n";
                 } else {
-                    for (const auto& pair : pipe_data) {
-                        std::cout << "ID: " << pair.first << "\n";
-                        pair.second.print();
+                    for (const auto& [id, pipe] : gts.get_pipes()) {
+                        std::cout << "ID: " << id << "\n";
+                        pipe.print();
                         std::cout << "------------------\n";
                     }
                 }
                 std::cout << "\n    КС    \n";
-                if (cs_data.empty()) {
-                    std::cout << "Труб пока нет.\n";
+                if (gts.get_css().empty()) {
+                    std::cout << "КС пока нет.\n";
                 } else {
-                    for (const auto& pair : cs_data) {
-                        std::cout << "ID: " << pair.first << "\n";
-                        pair.second.print();
+                    for (const auto& [id, cs] : gts.get_css()) {
+                        std::cout << "ID: " << id << "\n";
+                        cs.print();
                         std::cout << "------------------\n";
                     }
                 }
@@ -379,30 +308,30 @@ int main() {
             }
             case 4: {
                 clear_screen();
-                edit_p_batch(pipe_data);
+                edit_p_batch(gts.get_pipes_mutable());
                 break;
             }
             case 5: {
                 clear_screen();
-                edit_p_batch(cs_data);
+                edit_p_batch(gts.get_css_mutable());
                 break;
             }
             case 6: {
                 clear_screen();
-                save_f(pipe_data, cs_data);
+                std::cout << "Введите имя файла для сохранения: ";
+                std::string filename;
+                std::getline(std::cin, filename);
+                gts.save_f(filename);
+                log_action("Сохранение данных в файл: " + filename);
                 break;
             }
             case 7: {
                 clear_screen();
-                load_f(pipe_data, cs_data);
-                num_pipe = 0;
-                for (const auto& [id, pipe] : pipe_data) {
-                    if (id >= num_pipe) {num_pipe = id;}
-                }
-                num_cs = 0;
-                for (const auto& [id, cs] : cs_data) {
-                    if (id >= num_cs) {num_cs = id;}
-                }
+                std::cout << "Введите имя файла для загрузки: ";
+                std::string filename;
+                std::getline(std::cin, filename);
+                gts.load_f(filename);
+                log_action("Загрузка данных из файла: " + filename);
                 break;
             }
             case 0: {
