@@ -2,53 +2,16 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "clear_in.hpp"
 
 
 class Cs {
     private:
         std::string name = "";
+        int id = 1;
         int c_shop = 0;
         int c_shop_w = 0;
         char cl = 'E';
     public:
-        void add_cs() {
-            std::cout << "      Добавление КС\n";
-            std::cout << "Введите название КС: ";
-            while (!(std::getline(std::cin, name)) || name.empty()) {
-                std::cout << "Некорректная длина. Повторите ввод: ";
-            }
-
-            std::cout << "Введите общее количество цехов: ";
-            while (!(std::cin >> c_shop) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || c_shop <= 0) {
-                std::cout << "Количество цехов должно быть > 0. Повторите: ";
-                clear_input();
-            }
-
-            std::cout << "Введите количество цехов в работе: ";
-            while (!(std::cin >> c_shop_w) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || c_shop_w > c_shop || c_shop_w < 0) {
-                std::cout << "Цехов в работе не может быть больше, чем всего (" << c_shop << "). Повторите: ";
-                clear_input();
-            }
-
-            std::string input_cl;
-            std::cout << "Введите Класс станции (A, B, C, D, E): ";
-            while (true) {
-                std::cin >> input_cl;
-                if (input_cl.length() == 1) {
-                    char c = toupper(input_cl[0]);
-                    if (c == 'A' || c == 'B' ||c == 'C' || c == 'D' || c == 'E') {
-                        cl = c;
-                        break;
-                    }
-                }
-                std::cout << "Некорректный класс! Введите одну из букв (A, B, C, D, E): ";
-                clear_input();
-            }
-            clear_input();//!!!
-            std::cout << "КС добавлена!\n";
-        }
-
         void print() const {
             if (c_shop == 0) {
                 return;
@@ -61,7 +24,31 @@ class Cs {
             std::cout << "Процент неработающих цехов: " << get_percentage() << "%\n";
         }
 
-        void edit_cs(int choice) {
+        void set_name(const std::string& new_name) {
+            name = new_name;
+        }
+
+        void set_id(int new_id) {
+            if (new_id > 0) {
+                id = new_id;
+            }
+        }  
+
+        void set_shops(int total, int working) {
+            if (total > 0 && working >= 0 && working <= total) {
+                c_shop = total;
+                c_shop_w = working;
+            }
+        }
+
+        void set_class(char new_cl) {
+            char c = toupper(new_cl);
+            if (c >= 'A' && c <= 'E') {
+                cl = c;
+            }
+        }
+
+        void edit(int choice) {
             if (choice == 1) {
                 if (c_shop_w < c_shop) {
                     c_shop_w++;
@@ -79,16 +66,18 @@ class Cs {
             }
         }
 
-        void save_cs(std::ofstream& out) const {
-            out << name << "\n" << c_shop << "\n" << c_shop_w << "\n" << cl << "\n";
+
+        friend std::ostream& operator<<(std::ostream& out, const Cs& cs) {
+            out <<cs. name << "\n" << cs.id << "\n" << cs.c_shop << "\n" << cs.c_shop_w << "\n" << cs.cl;
+            return out;
         }
 
-        void load_cs(std::ifstream& in) {
-            in.ignore();
-            std::getline(in, name);
-            in >> c_shop >> c_shop_w >> cl;
-            
+        friend std::istream& operator>>(std::istream& in, Cs& cs) {
+            std::getline(in, cs.name);
+            in >> cs.id >> cs.c_shop >> cs.c_shop_w >> cs.cl;
+            return in;
         }
+
 
         std::string get_name() const {
             return name;
@@ -99,5 +88,9 @@ class Cs {
                 return 0.0;
             }
             return ((double)(c_shop - c_shop_w) / c_shop) * 100.0;
+        }
+
+        int get_id() {
+            return id;
         }
 };

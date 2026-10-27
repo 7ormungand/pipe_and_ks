@@ -36,14 +36,16 @@ public:
         return cs_data.empty();
     }
 
-    void add_pipes(const Pipe& pip) {
-        pipe_data[++num_pipe] = pip;
+    void add_pipes(Pipe& pip) {
+        pip.set_id(++num_pipe);
+        pipe_data[num_pipe] = pip;   
     }
 
-    void add_css(const Cs& css) {
-        cs_data[++num_cs] = css;
+    void add_css(Cs& css) {
+        css.set_id(++num_cs);
+        cs_data[num_cs] = css;
     }
-
+    
     void clear() {
         pipe_data.clear();
         cs_data.clear();
@@ -68,15 +70,15 @@ public:
             std::cout << "Ошибка открытия файла!\n";
             return;
         }
+
         out << pipe_data.size() << "\n";
         for (const auto& [id, pipe] : pipe_data) {
-            out << id << "\n";
-            pipe.save_p(out);
+            out << pipe << "\n";
         }
+
         out << cs_data.size() << "\n";
         for (const auto& [id, cs] : cs_data) {
-            out << id << "\n";
-            cs.save_cs(out);
+            out << cs << "\n";
         }
         std::cout << "Все данные успешно сохранены в файл: " << filename << "\n";
     }
@@ -91,23 +93,23 @@ public:
 
         size_t count_pipes = 0;
         if (in >> count_pipes) {
+            in.ignore();
             for (size_t i = 0; i < count_pipes; ++i) {
-                int id;
-                in >> id;
                 Pipe p;
-                p.load_pipe(in);
-                pipe_data[id] = p;
+                in >> p;
+                in.ignore();
+                pipe_data[p.get_id()] = p;
             }
         }
 
         size_t count_css = 0;
         if (in >> count_css) {
+            in.ignore();
             for (size_t i = 0; i < count_css; ++i) {
-                int id;
-                in >> id;
                 Cs cs;
-                cs.load_cs(in);
-                cs_data[id] = cs;
+                in >> cs;
+                in.ignore();
+                cs_data[cs.get_id()] = cs;
             }
         }
         recalculate_ids();

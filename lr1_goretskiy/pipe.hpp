@@ -2,39 +2,16 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "clear_in.hpp"
 
 
 class Pipe {
     private:
         std::string name = "";
+        int id = 1;
         double length = 0;
         int d = 0;
         bool work = false;
     public:
-        void add_p() {
-            std::cout << "      Добавление трубы\n";
-            std::cout << "Введите километровую отметку (название): ";
-            while (!(std::getline(std::cin, name)) || name.empty()) {
-                std::cout << "Некорректная длина. Повторите ввод: ";
-            }
-
-            std::cout << "Введите длину (км): ";
-            while (!(std::cin >> length) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || length <= 0) {
-                std::cout << "Некорректно. Повторите ввод: ";
-                clear_input();
-            }
-
-            std::cout << "Введите диаметр (мм): ";
-            while (!(std::cin >> d) || (std::cin.peek() != '\n' && std::cin.peek() != EOF) || d <= 0) {
-                std::cout << "Некорректно. Повторите ввод: ";
-                clear_input();
-            }
-            work = true;
-            clear_input();
-            std::cout << "Труба добавлена!\n";
-        }
-
         void print() const {
             if (d == 0) {
                 return;
@@ -46,17 +23,17 @@ class Pipe {
             std::cout << "Статус: " << (work ? "В работе" : "В ремонте" ) << "\n";
         }
 
-        void save_p(std::ofstream& out) const {
-            out << name << "\n" << length << "\n" << d << "\n" << work << "\n";
+        friend std::ostream& operator<<(std::ostream& out, const Pipe& p) {
+            out << p.name << "\n" << p.id << "\n" << p.length << "\n" << p.d << "\n" << p.work;
+            return out;
         }
 
-        void load_pipe(std::ifstream& in) {
-            in.ignore();
-            std::getline(in, name);
-            in >> length >> d >> work;
+        friend std::istream& operator>>(std::istream& in, Pipe& p) {
+            std::getline(in, p.name);
+            in >> p.id >> p.length >> p.d >> p.work;
+            return in;
+        }
         
-        }
-
         std::string get_name() const {
             return name;
         }
@@ -64,12 +41,39 @@ class Pipe {
             return !work;
         }
 
-        void edit_p() {
+        void edit() {
             work = !work;
+        }
+        
+        void set_name(const std::string& new_name) {
+            name = new_name;
+        }
+
+        void set_id(int new_id) {
+            if (new_id > 0) {
+                id = new_id;
+            }
+        }   
+
+        void set_len(double new_len) {
+            if (new_len > 0) {
+                length = new_len;
+            }
+        }       
+        
+        void set_diametr(int new_d) {
+            if (new_d > 0) {
+                d = new_d;
+            }
         }
 
         void set_work(bool status) {
             work = status;
         }
-    
+
+        int get_id() {
+            return id;
+        }
+
+
 };
