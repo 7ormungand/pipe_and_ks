@@ -6,8 +6,12 @@
             "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
+                "-std=c++20",
+                "main.cpp",
+                "pipe.cpp",
+                "cs_station.cpp",
+                "gts.cpp",
+                "console.cpp",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],
