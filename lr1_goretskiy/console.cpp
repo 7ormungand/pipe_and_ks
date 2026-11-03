@@ -189,16 +189,24 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
             std::string line;
             INPUT_LINE(std::cin, line);
             std::istringstream iss(line);
-            int id;
-            while (iss >> id && id != 0) {
+            std::string token;
+
+            while (iss >> token && token != "0") {
+                if (token.find_first_not_of("0123456789") != std::string::npos) {
+                    std::cout << "Некторректный ввод:  " << token << "\n"; 
+                    continue;
+                }
+            
+                int id = std::stoi(token);
                 if (found_set.count(id) == 0) {
                     std::cout << "ID " << id << " отсутствует среди найденных!\n";
-                } else if (alr_tk.insert(id).second == false) {
+                } else if (!alr_tk.insert(id).second) {
                     std::cout << "ID " << id << " уже добавлен!\n";
                 } else {
                     target_ids.push_back(id);
                 }
             }
+            break;
         }
     }
     if (target_ids.empty()) {
