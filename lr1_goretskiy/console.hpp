@@ -40,9 +40,6 @@ class Console {
         void printMenu() const;
         void printGts() const;
 
-        void add_pipe_in_gts();
-        void add_cs_in_gts();
-
         void batch_edit_pipes();
         void batch_edit_stations();
 };  

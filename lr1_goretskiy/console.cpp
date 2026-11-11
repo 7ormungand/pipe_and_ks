@@ -16,28 +16,6 @@ void Console::printMenu() const {
     }
 }
 
-void Console::printGts() const {
-    std::cout << "\n    Трубы    \n";
-    if (gts.get_pipes().empty()) {
-        std::cout << "Труб пока нет.\n";
-    } else {
-        for (const auto& [id, pipe] : gts.get_pipes()) {
-            std::cout << "ID: " << id << "\n";
-            pipe.print();
-            std::cout << "------------------\n";
-        }
-    }
-    std::cout << "\n    КС    \n";
-    if (gts.get_css().empty()) {
-        std::cout << "КС пока нет.\n";
-    } else {
-        for (const auto& [id, cs] : gts.get_css()) {
-            std::cout << "ID: " << id << "\n";
-            cs.print();
-            std::cout << "------------------\n";
-        }
-    }
-}
 
 bool Console::search_case(const std::string& str, const std::string& substr) {
     if (substr.empty()) {
@@ -144,7 +122,6 @@ void Console::redact_cs(std::unordered_map<int, Cs>& items, std::vector<int>& ta
     int cs_act = GetCorrectNumber(1, 2);
 
     for (int id : target_ids) {
-        std::cout << "\nРедактирование КС ID: " << id << "\n";
         items[id].edit(cs_act);
     }
     std::cout << "Изменения успешно применены к " << target_ids.size() << " КС.\n";
@@ -231,62 +208,6 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
         }
     }
 } 
-
-void Console::add_pipe_in_gts() {
-    std::cout << "      Добавление трубы\n";
- 
-    std::cout << "Введите километровую отметку (название): ";
-    std::string name;
-    INPUT_LINE(std::cin, name);
-
-    std::cout << "Введите длину (км): ";
-    double length = GetCorrectNumber(1.0, 100000000000000000.0);  
-
-    std::cout << "Введите диаметр (мм): ";
-    unsigned long int d = GetCorrectNumber(1ULL, 100000000000000000ULL);
-
-    std::cout << "Труба добавлена!\n";
-
-    Pipe p(name, gts.get_num_pipe(), length, d, true);
-    gts.add_pipes(p);
-}
-
-void Console::add_cs_in_gts() {
-    std::cout << "      Добавление КС\n";
-
-    std::cout << "Введите название КС: ";
-    std::string name;
-    INPUT_LINE(std::cin, name);
-
-    std::cout << "Введите общее количество цехов: ";
-    unsigned long long int c_shop = GetCorrectNumber(1ULL, 10000000ULL);
-
-    std::cout << "Введите количество цехов в работе: ";
-    unsigned long long int c_shop_w = GetCorrectNumber(1ULL, c_shop);
-
-    std::string input_cl;
-    char cl = 'E';
-    std::cout << "Введите Класс станции (A, B, C, D, E): ";
-    while (true) {
-        std::cin >> input_cl;
-        if (input_cl.length() == 1) {
-            char c = std::toupper(input_cl[0]);
-            if (c >= 'A' && c <= 'E') {
-                cl = c;
-                break;
-            }
-        }
-        std::cout << "Некорректный класс! Введите одну из букв (A, B, C, D, E): ";
-        std::cin.clear();
-        std::cin.ignore(10000, '\n');
-    }
-    std::cin.ignore(10000, '\n');
-    std::cout << "КС добавлена!\n";
-    std::cerr << cl << "\n";
-
-    Cs cs(name, gts.get_num_cs(), c_shop, c_shop_w, cl);
-    gts.add_css(cs);
-}
 
 void Console::batch_edit_pipes() {
     edit_p_batch(gts.get_pipes_mutable());

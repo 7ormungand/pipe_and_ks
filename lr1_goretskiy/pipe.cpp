@@ -1,25 +1,21 @@
 #include "pipe.hpp"
 
+int Pipe::next_id = 1;
 
-Pipe::Pipe(std::string new_name, int new_id, double new_l, int new_d, bool new_status)  : name(new_name), id(new_id), length(new_l), d(new_d), work(new_status) {}
+Pipe::Pipe(std::string new_name, double new_l, int new_d, bool new_status) : 
+name(new_name), length(new_l), d(new_d), work(new_status) {
+    id = next_id++;
+}
 
 void Pipe::print() const {
-    if (d == 0) {
-        return;
-    }
-    
-    std::cout << "Название (км отметка): " << (name.empty() ? "(пусто)" : name) << "\n";
+    std::cout << "Название (км отметка): " << name << "\n";
     std::cout << "Длина: " << length << "\n";
     std::cout << "Диаметр: " << d << "\n";
     std::cout << "Статус: " << (work ? "В работе" : "В ремонте" ) << "\n";
 }
 
-void Pipe::edit(int choice) {
-    if (choice == 1) {
-        work = true;
-    } else if (choice == 0) {
-        work = false;
-    }
+void Pipe::edit(bool choice) {
+    work = choice;
 }
 
 std::ostream& operator<<(std::ostream& out, const Pipe& p) {
@@ -30,5 +26,6 @@ std::ostream& operator<<(std::ostream& out, const Pipe& p) {
 std::istream& operator>>(std::istream& in, Pipe& p) {
     std::getline(in, p.name);
     in >> p.id >> p.length >> p.d >> p.work;
+    p.next_id = p.next_id > p.id + 1 ? p.next_id : p.id + 1;
     return in;
 }

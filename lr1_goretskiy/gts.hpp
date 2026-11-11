@@ -8,9 +8,6 @@ class GTS {
 private:
     std::unordered_map<int, Pipe> pipe_data;
     std::unordered_map<int, Cs> cs_data;
-    int num_pipe = 0;
-    int num_cs = 0;
-
 public:
     
     const std::unordered_map<int, Pipe>& get_pipes() const { 
@@ -34,25 +31,12 @@ public:
         return cs_data.empty();
     }
 
-    int get_num_pipe() {
-        return ++num_pipe;
-    }
+    void add_pipe_in_gts();
+    void add_cs_in_gts();
 
-    int get_num_cs() {
-        return ++num_cs;
-    }
-
-    void add_pipes(Pipe& pip) {
-        pipe_data[num_pipe] = pip; 
-    }
-
-    void add_css(Cs& css) {
-        cs_data[num_cs] = css;
-    }
-    
     void clear();
-    void recalculate_ids();
 
+    void print() const;
     void save_f(const std::string& filename) const;
     void load_f(const std::string& filename);
 };

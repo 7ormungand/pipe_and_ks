@@ -5,17 +5,17 @@
 
 class Cs {
     private:
+        static int next_id;
         std::string name = "";
-        int id = 1;
+        int id = 0;
         int c_shop = 0;
         int c_shop_w = 0;
         char cl = 'E';
     public:
         Cs() = default;
-        Cs(std::string new_name, int new_id, int new_c_shop, int new_c_shop_w, char new_cl);
+        Cs(std::string new_name, int new_c_shop, int new_c_shop_w, char new_cl);
 
         void print() const;
-        void edit(int choice); 
         
         friend std::ostream& operator<<(std::ostream& out, const Cs& cs);
         friend std::istream& operator>>(std::istream& in, Cs& cs);
@@ -34,4 +34,6 @@ class Cs {
             }
             return ((double)(c_shop - c_shop_w) / c_shop) * 100.0;
         }    
+
+        void edit(int choice); 
 };

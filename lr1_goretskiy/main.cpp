@@ -45,17 +45,17 @@ int main() {
         switch (GetCorrectNumber(0, 7)) {
             case 1: {
                 clear_screen();
-                console.add_pipe_in_gts();
+                gts.add_pipe_in_gts();
                 break;
             }
             case 2: {
                 clear_screen();
-                console.add_cs_in_gts();
+                gts.add_cs_in_gts();
                 break;
             }
             case 3: {
                 clear_screen();
-                console.printGts();
+                gts.print();
                 break;
             }
             case 4: {
