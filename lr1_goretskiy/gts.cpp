@@ -33,59 +33,15 @@ void GTS::print() const {
     }
 }
 
-void GTS::add_pipe_in_gts() {
-    std::cout << "      Добавление трубы\n";
- 
-    std::cout << "Введите километровую отметку (название): ";
-    std::string name;
-    INPUT_LINE(std::cin, name);
-
-    std::cout << "Введите длину (км): ";
-    double length = GetCorrectNumber(1.0, 100000000000000000.0);  
-
-    std::cout << "Введите диаметр (мм): ";
-    unsigned long int d = GetCorrectNumber(1ULL, 100000000000000000ULL);
-
-    std::cout << "Труба добавлена!\n";
-
-    Pipe p(name, length, d, true);
+void GTS::add_pipe_in_gts() { 
+    Pipe p;
+    p.input();
     pipe_data.emplace(p.get_id(), p);
 }
 
 void GTS::add_cs_in_gts() {
-    std::cout << "      Добавление КС\n";
-
-    std::cout << "Введите название КС: ";
-    std::string name;
-    INPUT_LINE(std::cin, name);
-
-    std::cout << "Введите общее количество цехов: ";
-    unsigned long long int c_shop = GetCorrectNumber(1ULL, 10000000ULL);
-
-    std::cout << "Введите количество цехов в работе: ";
-    unsigned long long int c_shop_w = GetCorrectNumber(1ULL, c_shop);
-
-    std::string input_cl;
-    char cl = 'E';
-    std::cout << "Введите Класс станции (A, B, C, D, E): ";
-    while (true) {
-        std::cin >> input_cl;
-        if (input_cl.length() == 1) {
-            char c = std::toupper(input_cl[0]);
-            if (c >= 'A' && c <= 'E') {
-                cl = c;
-                break;
-            }
-        }
-        std::cout << "Некорректный класс! Введите одну из букв (A, B, C, D, E): ";
-        std::cin.clear();
-        std::cin.ignore(10000, '\n');
-    }
-    std::cin.ignore(10000, '\n');
-    std::cerr << cl << "\n";
-    std::cout << "КС добавлена!\n";
-    
-    Cs cs(name, c_shop, c_shop_w, cl);
+    Cs cs;
+    cs.input();
     cs_data.emplace(cs.get_id(), cs);
 }
 
@@ -117,23 +73,19 @@ void GTS::load_f(const std::string& filename) {
         clear();
 
         size_t count_pipes = 0;
-        if (in >> count_pipes) {
-            in.ignore(10000, '\n');
+        if (in >> count_pipes >> std::ws) {
             for (size_t i = 0; i < count_pipes; ++i) {
                 Pipe p;
-                in >> p;
-                in.ignore(10000, '\n');
+                in >> p >> std::ws;
                 pipe_data.emplace(p.get_id(), p);
             }
         }
 
         size_t count_css = 0;
-        if (in >> count_css) {
-            in.ignore(10000, '\n');
+        if (in >> count_css >> std::ws) {
             for (size_t i = 0; i < count_css; ++i) {
                 Cs cs;
-                in >> cs;
-                in.ignore(10000, '\n');
+                in >> cs >> std::ws;
                 cs_data.emplace(cs.get_id(), cs);
             }
         }

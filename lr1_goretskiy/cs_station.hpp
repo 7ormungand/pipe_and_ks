@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <fstream>
 
 
 class Cs {
@@ -17,8 +18,8 @@ class Cs {
 
         void print() const;
         
-        friend std::ostream& operator<<(std::ostream& out, const Cs& cs);
-        friend std::istream& operator>>(std::istream& in, Cs& cs);
+        friend std::ofstream& operator<<(std::ofstream& out, const Cs& cs);
+        friend std::ifstream& operator>>(std::ifstream& in, Cs& cs);
 
         std::string get_name() const {
             return name;
@@ -35,5 +36,6 @@ class Cs {
             return ((double)(c_shop - c_shop_w) / c_shop) * 100.0;
         }    
 
+        void input();
         void edit(int choice); 
 };

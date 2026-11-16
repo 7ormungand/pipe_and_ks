@@ -23,8 +23,6 @@ class Console {
             "Выберите действие: "
         };
 
-        bool search_case(const std::string& str, const std::string& substr);
-
         template<typename T>
         std::vector<int> search_p(const std::unordered_map<int, T>& some_type);
 

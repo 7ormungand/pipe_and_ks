@@ -1,6 +1,7 @@
 #include <iostream> 
 #include <string> 
 #include <fstream> 
+#include <windows.h>
 
 #include <format> 
 #include <chrono> 
@@ -25,7 +26,9 @@ void pause() {
 }
 
 int main() {
-    setlocale(LC_ALL, "ru-RU.UTF-8");
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+    // setlocale(LC_ALL, "ru-RU.UTF-8");
     
     std::filesystem::create_directories("logs");
     redirect_output_wrapper cerr_out(std::cerr);

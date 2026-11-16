@@ -17,7 +17,7 @@ void Console::printMenu() const {
 }
 
 
-bool Console::search_case(const std::string& str, const std::string& substr) {
+bool search_case(const std::string& str, const std::string& substr) {
     if (substr.empty()) {
         return true;
     }
@@ -45,6 +45,45 @@ bool Console::search_case(const std::string& str, const std::string& substr) {
 }
 
 template<typename T>
+void search_name(std::vector<int>& f_ids, const std::unordered_map<int, T>& some_type) {
+    std::cout << "Введите наименование (или часть): ";
+    std::string querry;
+    INPUT_LINE(std::cin, querry);
+    for (const auto& [id, val] : some_type) {
+        if (search_case(val.get_name(), querry)) {
+            f_ids.push_back(id);
+        }
+    }
+}
+
+template<typename T>
+void search_status(std::vector<int>& f_ids, const std::unordered_map<int, T>& some_type) {
+    std::cout << "Искать трубы:\n1. В ремонте\n2. В работе\nВыбор: ";
+    int rep_choice = GetCorrectNumber(1, 2);
+    bool target_repair = (rep_choice == 1);
+
+    for (const auto& [id, val] : some_type) {
+        if (val.is_in_repair() == target_repair) {
+            f_ids.push_back(id);
+        }
+    } 
+}
+
+template<typename T>
+void search_percent(std::vector<int>& f_ids, const std::unordered_map<int, T>& some_type) {
+    std::cout << "Нижняя граница процента (0..100): ";
+    double lo = GetCorrectNumber(0.0, 100.0);
+    std::cout << "Верхняя граница процента (" << lo << "..100): ";
+    double hi = GetCorrectNumber(lo, 100.0);
+
+    for (const auto& [id, val] : some_type) {
+        if (val.get_percentage() >= lo && val.get_percentage() <= hi) {
+            f_ids.push_back(id);
+        }
+    }
+}
+
+template<typename T>
 std::vector<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
     std::vector<int> found_ids;
     if (some_type.empty()) {
@@ -56,44 +95,24 @@ std::vector<int> Console::search_p(const std::unordered_map<int, T>& some_type) 
     std::is_same_v<T, Pipe> ? std::cout << "2. По признаку 'в ремонте'\n" : std::cout << "2. По проценту незадейственных цехов\n";
     std::cout << "Выберите вариант: ";
 
+    void (*filter) (std::vector<int>&, const std::unordered_map<int, T>&);
+
     switch (GetCorrectNumber(1, 2)) {
         case 1: {
-            std::cout << "Введите наименование (или часть): ";
-            std::string querry;
-            INPUT_LINE(std::cin, querry);
-            for (const auto& [id, val] : some_type) {
-                if (search_case(val.get_name(), querry)) {
-                    found_ids.push_back(id);
-                }
-            }
+            filter = search_name;
             break;
         }
         case 2: {
             if constexpr(std::is_same_v<T, Pipe>) {
-                std::cout << "Искать трубы:\n1. В ремонте\n2. В работе\nВыбор: ";
-                int rep_choice = GetCorrectNumber(1, 2);
-                bool target_repair = (rep_choice == 1);
-
-                for (const auto& [id, val] : some_type) {
-                    if (val.is_in_repair() == target_repair) {
-                        found_ids.push_back(id);
-                    }
-                }   
+                filter = search_status;
             } else {
-                std::cout << "Нижняя граница процента (0..100): ";
-                double lo = GetCorrectNumber(0.0, 100.0);
-                std::cout << "Верхняя граница процента (" << lo << "..100): ";
-                double hi = GetCorrectNumber(lo, 100.0);
-
-                for (const auto& [id, val] : some_type) {
-                    if (val.get_percentage() >= lo && val.get_percentage() <= hi) {
-                        found_ids.push_back(id);
-                    }
-                }
+                filter = search_percent;
             }
             break;
         }   
     }
+    filter(found_ids, some_type);
+
     std::cout << "\nРезультаты поиска (" << found_ids.size() << " найдено):\n";
     for (int id : found_ids) {
         std::cout << "ID: " << id << "\n";
@@ -170,7 +189,7 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
 
             while (iss >> token && token != "0") {
                 if (token.find_first_not_of("0123456789") != std::string::npos) {
-                    std::cout << "Некторректный ввод:  " << token << "\n"; 
+                    std::cout << "Некорректный ввод:  " << token << "\n"; 
                     continue;
                 }
             

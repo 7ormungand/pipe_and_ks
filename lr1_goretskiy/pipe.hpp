@@ -1,13 +1,14 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <fstream>
 
 
 class Pipe {
     private:
         static int next_id;
         std::string name = "";
-        int id = 0;
+        unsigned long int id = 0;
         double length = 0;
         int d = 0;
         bool work = false;
@@ -17,8 +18,8 @@ class Pipe {
 
         void print() const;
 
-        friend std::ostream& operator<<(std::ostream& out, const Pipe& p);
-        friend std::istream& operator>>(std::istream& in, Pipe& p);
+        friend std::ofstream& operator<<(std::ofstream& out, const Pipe& p);
+        friend std::ifstream& operator>>(std::ifstream& in, Pipe& p);
         
         std::string get_name() const {
             return name;
@@ -32,5 +33,6 @@ class Pipe {
             return !work;
         }
 
+        void input();
         void edit(bool choice);
 };
