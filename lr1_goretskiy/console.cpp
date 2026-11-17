@@ -44,48 +44,46 @@ bool search_case(const std::string& str, const std::string& substr) {
     return false;
 }
 
-template<typename T>
-void search_name(std::vector<int>& f_ids, const std::unordered_map<int, T>& some_type) {
+std::string get_f_name() {
     std::cout << "Введите наименование (или часть): ";
     std::string querry;
     INPUT_LINE(std::cin, querry);
-    for (const auto& [id, val] : some_type) {
-        if (search_case(val.get_name(), querry)) {
-            f_ids.push_back(id);
-        }
-    }
+    return querry;
 }
 
-template<typename T>
-void search_status(std::vector<int>& f_ids, const std::unordered_map<int, T>& some_type) {
+bool get_status() {
     std::cout << "Искать трубы:\n1. В ремонте\n2. В работе\nВыбор: ";
     int rep_choice = GetCorrectNumber(1, 2);
     bool target_repair = (rep_choice == 1);
-
-    for (const auto& [id, val] : some_type) {
-        if (val.is_in_repair() == target_repair) {
-            f_ids.push_back(id);
-        }
-    } 
+    return target_repair;
 }
 
-template<typename T>
-void search_percent(std::vector<int>& f_ids, const std::unordered_map<int, T>& some_type) {
+std::pair<double, double> get_range() {
     std::cout << "Нижняя граница процента (0..100): ";
     double lo = GetCorrectNumber(0.0, 100.0);
     std::cout << "Верхняя граница процента (" << lo << "..100): ";
     double hi = GetCorrectNumber(lo, 100.0);
-
-    for (const auto& [id, val] : some_type) {
-        if (val.get_percentage() >= lo && val.get_percentage() <= hi) {
-            f_ids.push_back(id);
-        }
-    }
+    return {lo, hi};
 }
 
+
 template<typename T>
-std::vector<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
-    std::vector<int> found_ids;
+bool SearchByName(const T& s, std::string param){
+	return search_case(s.get_name(), param);
+}
+
+bool SearchByStatus(const Pipe& s, bool param){
+	return s.is_in_repair() == param;
+}
+
+bool SearchByPercent(const Cs& s, std::pair<double, double> param){
+	return s.get_percentage() >= param.first && s.get_percentage() <= param.second;
+}
+
+
+template<typename T>
+std::set<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
+    std::set<int> found_ids;
     if (some_type.empty()) {
         std::cout << "Список пуст!\n";
         return found_ids;
@@ -95,23 +93,20 @@ std::vector<int> Console::search_p(const std::unordered_map<int, T>& some_type) 
     std::is_same_v<T, Pipe> ? std::cout << "2. По признаку 'в ремонте'\n" : std::cout << "2. По проценту незадейственных цехов\n";
     std::cout << "Выберите вариант: ";
 
-    void (*filter) (std::vector<int>&, const std::unordered_map<int, T>&);
-
     switch (GetCorrectNumber(1, 2)) {
         case 1: {
-            filter = search_name;
+            found_ids = FindObjByFilter(some_type, SearchByName, get_f_name());
             break;
         }
         case 2: {
-            if constexpr(std::is_same_v<T, Pipe>) {
-                filter = search_status;
+            if constexpr(std::is_same_v<T, Pipe>) { 
+                found_ids = FindObjByFilter(some_type, SearchByStatus, get_status());
             } else {
-                filter = search_percent;
+                found_ids = FindObjByFilter(some_type, SearchByPercent, get_range());
             }
             break;
         }   
     }
-    filter(found_ids, some_type);
 
     std::cout << "\nРезультаты поиска (" << found_ids.size() << " найдено):\n";
     for (int id : found_ids) {
@@ -122,7 +117,7 @@ std::vector<int> Console::search_p(const std::unordered_map<int, T>& some_type) 
     return found_ids;
 }
 
-void Console::redact_pipe(std::unordered_map<int, Pipe>& items, std::vector<int>& target_ids) {
+void Console::redact_pipe(std::unordered_map<int, Pipe>& items, std::set<int>& target_ids) {
     std::cout << "Выберите новый статус для выбранных труб (0 - В ремонте, 1 - В работе): ";
     int new_status = GetCorrectNumber(0, 1);
 
@@ -132,7 +127,7 @@ void Console::redact_pipe(std::unordered_map<int, Pipe>& items, std::vector<int>
     std::cout << "Статус успешно обновлен для " << target_ids.size() << " труб(ы).\n";
 }
 
-void Console::redact_cs(std::unordered_map<int, Cs>& items, std::vector<int>& target_ids) {
+void Console::redact_cs(std::unordered_map<int, Cs>& items, std::set<int>& target_ids) {
     std::cout << "\nРедактирование КС:\n";
     std::cout << "1. Запустить цех\n";
     std::cout << "2. Остановить цех\n";
@@ -148,7 +143,7 @@ void Console::redact_cs(std::unordered_map<int, Cs>& items, std::vector<int>& ta
 
 template<typename T>
 void Console::edit_p_batch(std::unordered_map<int, T>& items) {
-    std::vector<int> found_ids = search_p(items);
+    std::set<int> found_ids = search_p(items);
     if (found_ids.empty()) {
         return;
     }
@@ -170,7 +165,7 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
     std::cout << "2. Выбранному подмножеству ID\n";
     std::cout << "Выберите: ";
 
-    std::vector<int> target_ids;
+    std::set<int> target_ids;
     switch (GetCorrectNumber(1, 2)) {
         case 1: {
             target_ids = found_ids;
@@ -179,8 +174,7 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
         case 2: {
             std::cout << "Введите ID через пробел (завершите ввод элементом 0): ";
             
-            const std::unordered_set<int> found_set(found_ids.begin(), found_ids.end());
-            std::unordered_set<int> alr_tk;
+            std::set<int> alr_tk;
 
             std::string line;
             INPUT_LINE(std::cin, line);
@@ -194,12 +188,12 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
                 }
             
                 int id = std::stoi(token);
-                if (found_set.count(id) == 0) {
+                if (found_ids.count(id) == 0) {
                     std::cout << "ID " << id << " отсутствует среди найденных!\n";
                 } else if (!alr_tk.insert(id).second) {
                     std::cout << "ID " << id << " уже добавлен!\n";
                 } else {
-                    target_ids.push_back(id);
+                    target_ids.insert(id);
                 }
             }
             break;

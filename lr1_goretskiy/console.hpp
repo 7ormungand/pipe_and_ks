@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <set>
 
 #include "gts.hpp"
 
@@ -24,10 +25,10 @@ class Console {
         };
 
         template<typename T>
-        std::vector<int> search_p(const std::unordered_map<int, T>& some_type);
+        std::set<int> search_p(const std::unordered_map<int, T>& some_type);
 
-        void redact_pipe(std::unordered_map<int, Pipe>& items, std::vector<int>& target_ids);
-        void redact_cs(std::unordered_map<int, Cs>& items, std::vector<int>& target_ids);
+        void redact_pipe(std::unordered_map<int, Pipe>& items, std::set<int>& target_ids);
+        void redact_cs(std::unordered_map<int, Cs>& items, std::set<int>& target_ids);
 
         template<typename T>
         void edit_p_batch(std::unordered_map<int, T>& items);

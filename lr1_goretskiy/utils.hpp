@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <set>
+#include <unordered_map>
 
 inline void INPUT_LINE(std::istream& in, std::string& str) {
 	std::getline(in >> std::ws, str);
@@ -37,4 +39,20 @@ T GetCorrectNumber(T min, T max) {
 	std::cerr << x << std::endl;
 	std::cin.ignore(10000, '\n');
 	return x;
+}
+
+template<typename Obj, typename T>
+using Filter = bool(*)(const Obj& s, T param);
+
+template<typename Obj, typename T>
+std::set<int> FindObjByFilter(const std::unordered_map<int, Obj>& some_type, Filter<Obj, T> f, T param) {
+	std::set<int> res;
+
+	for (const auto& [id, val] : some_type) {
+        if (f(val, param)) {
+            res.insert(id);
+        }
+    }
+
+	return res;
 }
