@@ -14,9 +14,15 @@ void Pipe::print() const {
     std::cout << "Длина: " << length << "\n";
     std::cout << "Диаметр: " << d << "\n";
     std::cout << "Статус: " << (work ? "В работе" : "В ремонте" ) << "\n";
+    std::cout << "Соединение: ";
+    if (is_connected()) {
+        std::cout << "КС " << Cs_out_id << " -> КС " << Cs_in_id << "\n";
+    } else {
+        std::cout << "не подключена\n";
+    }
 }
 
-void Pipe::input() {
+void Pipe::input(int required_diameter) {
     std::cout << "      Добавление трубы\n";
 
     std::cout << "Введите километровую отметку (название): ";
@@ -25,8 +31,15 @@ void Pipe::input() {
     std::cout << "Введите длину (км): ";
     length = GetCorrectNumber(1.0, 100000000000.0);
 
-    std::cout << "Введите диаметр (мм): ";
-    d = GetCorrectNumber(1ULL, 100000000000ULL);
+    while (true) {
+        std::cout << "Введите диаметр (мм):\n";
+        d = choose_diameter();
+        if (required_diameter == 0 || d == required_diameter) {
+            break;
+        }
+        std::cout << "Для соединения нужна труба диаметром " << required_diameter
+                  << " мм. Выберите этот диаметр.\n";
+    }
 
     work = true;
     id = next_id++;
@@ -39,13 +52,14 @@ void Pipe::edit(bool choice) {
 }
 
 std::ofstream& operator<<(std::ofstream& out, const Pipe& p) {
-    out << p.name << "\n" << p.id << "\n" << p.length << "\n" << p.d << "\n" << p.work;
+    out << p.name << "\n" << p.id << "\n" << p.length << "\n" << p.d << "\n" << p.work << "\n" 
+        << p.Cs_out_id << "\n" << p.Cs_in_id;
     return out;
 }
 
 std::ifstream& operator>>(std::ifstream& in, Pipe& p) {
     std::getline(in, p.name);
-    in >> p.id >> p.length >> p.d >> p.work;
+    in >> p.id >> p.length >> p.d >> p.work >> p.Cs_out_id >> p.Cs_in_id;
     p.next_id = p.next_id > p.id + 1 ? p.next_id : p.id + 1;
     return in;
 }

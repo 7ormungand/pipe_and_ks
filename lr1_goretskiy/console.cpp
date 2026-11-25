@@ -16,6 +16,66 @@ void Console::printMenu() const {
     }
 }
 
+void Console::connect_pipe() {
+    std::cout << "\n    Соединение КС трубой\n";
+
+    if (gts.is_empty_css()) {
+        std::cout << "Ошибка: сначала добавьте хотя бы две КС.\n";
+        return;
+    }
+
+    std::cout << "Введите ID КС на выходе: ";
+    int cs_out = GetCorrectNumber(1, 1000000000);
+    if (!gts.cs_exists(cs_out)) {
+        std::cout << "Ошибка: КС " << cs_out << " не существует.\n";
+        return;
+    }
+
+    std::cout << "Введите ID КС на входе: ";
+    int cs_in = GetCorrectNumber(1, 1000000000);
+    if (!gts.cs_exists(cs_in)) {
+        std::cout << "Ошибка: КС " << cs_in << " не существует.\n";
+        return;
+    }
+
+    if (cs_out == cs_in) {
+        std::cout << "Ошибка: КС на выходе и на входе должны различаться.\n";
+        return;
+    }   
+
+    int diameter = choose_diameter();
+
+    int pipe_id = gts.find_free_pipe(diameter);
+    if (pipe_id != -1) {
+        gts.connect(pipe_id, cs_out, cs_in);
+        std::cout << "Найдена свободная труба ID " << pipe_id
+                  << " (диаметр " << diameter << " мм).\n";
+        std::cout << "Труба " << pipe_id << " соединена: КС " << cs_out
+                  << " -> КС " << cs_in << "\n";
+        return;
+    }
+
+    std::cout << "Свободной трубы диаметром " << diameter << " мм нет. Создайте новую трубу.\n";
+    int new_id = gts.add_pipe_interactive(diameter);
+
+    if (gts.connect(new_id, cs_out, cs_in)) {
+        std::cout << "Труба " << new_id << " соединена: КС " << cs_out
+                  << " -> КС " << cs_in << "\n";
+    } else {
+        std::cout << "Ошибка соединения трубы " << new_id << ".\n";
+    }
+}
+
+void Console::disconnect_pipe() {
+    std::cout << "Введите ID трубы для отключения: ";
+    int pipe_id = GetCorrectNumber(1, 1000000000);
+
+    if (gts.disconnect(pipe_id)) {
+        std::cout << "Труба " << pipe_id << " отключена.\n";
+    } else {
+        std::cout << "Труба с таким ID не найдена.\n";
+    }
+}
 
 bool search_case(const std::string& str, const std::string& substr) {
     if (substr.empty()) {
@@ -117,33 +177,33 @@ std::set<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
     return found_ids;
 }
 
-void Console::redact_pipe(std::unordered_map<int, Pipe>& items, std::set<int>& target_ids) {
+void Console::redact_pipe(std::set<int>& target_ids) {
     std::cout << "Выберите новый статус для выбранных труб (0 - В ремонте, 1 - В работе): ";
     int new_status = GetCorrectNumber(0, 1);
 
-    for (int id : target_ids) {
-        items[id].edit(new_status == 1);
-    }
+    gts.edit_pipes(target_ids, new_status);
     std::cout << "Статус успешно обновлен для " << target_ids.size() << " труб(ы).\n";
 }
 
-void Console::redact_cs(std::unordered_map<int, Cs>& items, std::set<int>& target_ids) {
+void Console::redact_cs(std::set<int>& target_ids) {
     std::cout << "\nРедактирование КС:\n";
     std::cout << "1. Запустить цех\n";
     std::cout << "2. Остановить цех\n";
     std::cout << "Выберите действие: ";
 
     int cs_act = GetCorrectNumber(1, 2);
-
-    for (int id : target_ids) {
-        items[id].edit(cs_act);
-    }
+    gts.edit_css(target_ids, cs_act);
     std::cout << "Изменения успешно применены к " << target_ids.size() << " КС.\n";
 }
 
 template<typename T>
-void Console::edit_p_batch(std::unordered_map<int, T>& items) {
-    std::set<int> found_ids = search_p(items);
+void Console::edit_p_batch() {
+    std::set<int> found_ids;
+    if constexpr (std::is_same_v<T, Pipe>) {
+        found_ids = search_p(gts.get_pipes());
+    } else {
+        found_ids = search_p(gts.get_css());
+    }
     if (found_ids.empty()) {
         return;
     }
@@ -206,26 +266,29 @@ void Console::edit_p_batch(std::unordered_map<int, T>& items) {
     switch (act) {
         case 1: {
             if constexpr (std::is_same_v<T, Pipe>) {
-                redact_pipe(items, target_ids);
+                redact_pipe(target_ids);
             } else {
-                redact_cs(items, target_ids);
+                redact_cs(target_ids);
             }
             break;
         } 
         case 2: {
-            for (int id : target_ids) {
-                items.erase(id);
+            size_t removed;
+            if constexpr (std::is_same_v<T, Pipe>) {
+                removed = gts.remove_pipes(target_ids);
+            } else {
+                removed = gts.remove_css(target_ids);
             }
-            std::cout << "Успешно удалено: " << target_ids.size() << "\n";
+            std::cout << "Успешно удалено: " << removed << "\n";
             break;
         }
     }
 } 
 
 void Console::batch_edit_pipes() {
-    edit_p_batch(gts.get_pipes_mutable());
+    edit_p_batch<Pipe>();
 }
 
 void Console::batch_edit_stations() {
-    edit_p_batch(gts.get_css_mutable());
+    edit_p_batch<Cs>();
 }

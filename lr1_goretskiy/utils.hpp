@@ -56,3 +56,15 @@ std::set<int> FindObjByFilter(const std::unordered_map<int, Obj>& some_type, Fil
 
 	return res;
 }
+
+inline int choose_diameter() {
+    std::cout << "Допустимые диаметры труб (мм):\n";
+    std::cout << "1. 500\n";
+    std::cout << "2. 700\n";
+    std::cout << "3. 1000\n";
+    std::cout << "4. 1400\n";
+    std::cout << "Выберите диаметр: ";
+    int choice = GetCorrectNumber(1, 4);
+    const int diameters[] = { 500, 700, 1000, 1400 };
+    return diameters[choice - 1];
+}

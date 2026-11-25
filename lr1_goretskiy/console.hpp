@@ -20,6 +20,9 @@ class Console {
             "5. Редактировать КС\n",
             "6. Сохранить\n",
             "7. Загрузить\n",
+            "8. Соединить КС трубой\n",
+            "9. Отсоединить трубу\n",
+            "10. Топологическая сортировка\n",
             "0. Выход\n\n",
             "Выберите действие: "
         };
@@ -27,17 +30,19 @@ class Console {
         template<typename T>
         std::set<int> search_p(const std::unordered_map<int, T>& some_type);
 
-        void redact_pipe(std::unordered_map<int, Pipe>& items, std::set<int>& target_ids);
-        void redact_cs(std::unordered_map<int, Cs>& items, std::set<int>& target_ids);
+        void redact_pipe(std::set<int>& target_ids);
+        void redact_cs(std::set<int>& target_ids);
 
         template<typename T>
-        void edit_p_batch(std::unordered_map<int, T>& items);
+        void edit_p_batch();
 
     public:
         Console(GTS& gts) : gts(gts) {}
 
         void printMenu() const;
-        void printGts() const;
+
+        void connect_pipe();
+        void disconnect_pipe();
 
         void batch_edit_pipes();
         void batch_edit_stations();

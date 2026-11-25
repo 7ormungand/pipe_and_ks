@@ -45,7 +45,7 @@ int main() {
         clear_screen();
         console.printMenu();
 
-        switch (GetCorrectNumber(0, 7)) {
+        switch (GetCorrectNumber(0, 10)) {
             case 1: {
                 clear_screen();
                 gts.add_pipe_in_gts();
@@ -85,6 +85,21 @@ int main() {
                 std::string filename;
                 INPUT_LINE(std::cin, filename);
                 gts.load_f(filename);
+                break;
+            }
+            case 8: {
+                clear_screen();
+                console.connect_pipe();
+                break;
+            }
+            case 9: {
+                clear_screen();
+                console.disconnect_pipe();
+                break;
+            }
+            case 10: {
+                clear_screen();
+                gts.topologic_sort();
                 break;
             }
             case 0: {
