@@ -4,6 +4,10 @@
 
 int Pipe::next_id = 1;
 
+int Pipe::max_id() {
+    return next_id;
+}
+
 Pipe::Pipe(std::string new_name, double new_l, int new_d, bool new_status) : 
 name(new_name), length(new_l), d(new_d), work(new_status) {
     id = next_id++;

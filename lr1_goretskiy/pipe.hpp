@@ -52,6 +52,8 @@ class Pipe {
             return Cs_out_id != -1;
         }
 
+        static int max_id();
+
         void connect(int CsNew_out_id, int CsNew_in_id) {
             Cs_out_id = CsNew_out_id;
             Cs_in_id = CsNew_in_id;

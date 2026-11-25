@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <sstream>
 
-#include "utils.hpp"
 #include "pipe.hpp"
 #include "cs_station.hpp"
 
@@ -141,8 +140,7 @@ bool SearchByPercent(const Cs& s, std::pair<double, double> param){
 }
 
 
-template<typename T>
-std::set<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
+std::set<int> Console::search(const std::unordered_map<int, Pipe>& some_type) {
     std::set<int> found_ids;
     if (some_type.empty()) {
         std::cout << "Список пуст!\n";
@@ -150,7 +148,7 @@ std::set<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
     }
     std::cout << "\nФильтр поиска:\n";
     std::cout << "1. По наименованию\n";
-    std::is_same_v<T, Pipe> ? std::cout << "2. По признаку 'в ремонте'\n" : std::cout << "2. По проценту незадейственных цехов\n";
+    std::cout << "2. По признаку 'в ремонте'\n";
     std::cout << "Выберите вариант: ";
 
     switch (GetCorrectNumber(1, 2)) {
@@ -159,20 +157,33 @@ std::set<int> Console::search_p(const std::unordered_map<int, T>& some_type) {
             break;
         }
         case 2: {
-            if constexpr(std::is_same_v<T, Pipe>) { 
-                found_ids = FindObjByFilter(some_type, SearchByStatus, get_status());
-            } else {
-                found_ids = FindObjByFilter(some_type, SearchByPercent, get_range());
-            }
+            found_ids = FindObjByFilter(some_type, SearchByStatus, get_status());            
             break;
         }   
     }
+    return found_ids;
+}
 
-    std::cout << "\nРезультаты поиска (" << found_ids.size() << " найдено):\n";
-    for (int id : found_ids) {
-        std::cout << "ID: " << id << "\n";
-        some_type.at(id).print();
-        std::cout << "---------------------\n";
+std::set<int> Console::search(const std::unordered_map<int, Cs>& some_type) {
+    std::set<int> found_ids;
+    if (some_type.empty()) {
+        std::cout << "Список пуст!\n";
+        return found_ids;
+    }
+    std::cout << "\nФильтр поиска:\n";
+    std::cout << "1. По наименованию\n";
+    std::cout << "2. По проценту незадейственных цехов\n";
+    std::cout << "Выберите вариант: ";
+
+    switch (GetCorrectNumber(1, 2)) {
+        case 1: {
+            found_ids = FindObjByFilter(some_type, SearchByName, get_f_name());
+            break;
+        }
+        case 2: {
+            found_ids = FindObjByFilter(some_type, SearchByPercent, get_range());
+            break;
+        }   
     }
     return found_ids;
 }
@@ -196,16 +207,38 @@ void Console::redact_cs(std::set<int>& target_ids) {
     std::cout << "Изменения успешно применены к " << target_ids.size() << " КС.\n";
 }
 
-template<typename T>
-void Console::edit_p_batch() {
-    std::set<int> found_ids;
-    if constexpr (std::is_same_v<T, Pipe>) {
-        found_ids = search_p(gts.get_pipes());
-    } else {
-        found_ids = search_p(gts.get_css());
+std::set<int> input_id(std::set<int>& found_ids) {
+    std::cout << "Введите ID через пробел (завершите ввод элементом 0): ";
+    
+    std::set<int> alr_tk;
+    std::set<int> target_ids;
+    std::set<int> ed_ids;
+    while (int id = GetCorrectNumber(0, Pipe::max_id())) {
+        ed_ids.insert(id);
     }
+    for (int id : ed_ids) {
+        if (found_ids.contains(id) == 0) {
+            std::cout << "ID " << id << " отсутствует среди найденных!\n";
+        } else if (!alr_tk.insert(id).second) {
+            std::cout << "ID " << id << " уже добавлен!\n";
+        } else {
+            target_ids.insert(id);
+        }
+    }
+    return target_ids;
+}
+
+void Console::edit_batch(const std::unordered_map<int, Pipe>& some_type_data) {
+    std::set<int> found_ids = search(some_type_data);
     if (found_ids.empty()) {
         return;
+    }
+
+    std::cout << "\nРезультаты поиска (" << found_ids.size() << " найдено):\n";
+    for (int id : found_ids) {
+        std::cout << "ID: " << id << "\n";
+        some_type_data.at(id).print();
+        std::cout << "---------------------\n";
     }
 
     std::cout << "\nПакетное редактирование с найденными объектами:\n";
@@ -232,30 +265,7 @@ void Console::edit_p_batch() {
             break;
         }
         case 2: {
-            std::cout << "Введите ID через пробел (завершите ввод элементом 0): ";
-            
-            std::set<int> alr_tk;
-
-            std::string line;
-            INPUT_LINE(std::cin, line);
-            std::istringstream iss(line);
-            std::string token;
-
-            while (iss >> token && token != "0") {
-                if (token.find_first_not_of("0123456789") != std::string::npos) {
-                    std::cout << "Некорректный ввод:  " << token << "\n"; 
-                    continue;
-                }
-            
-                int id = std::stoi(token);
-                if (found_ids.count(id) == 0) {
-                    std::cout << "ID " << id << " отсутствует среди найденных!\n";
-                } else if (!alr_tk.insert(id).second) {
-                    std::cout << "ID " << id << " уже добавлен!\n";
-                } else {
-                    target_ids.insert(id);
-                }
-            }
+            target_ids = input_id(found_ids);    
             break;
         }
     }
@@ -265,30 +275,78 @@ void Console::edit_p_batch() {
     }
     switch (act) {
         case 1: {
-            if constexpr (std::is_same_v<T, Pipe>) {
-                redact_pipe(target_ids);
-            } else {
-                redact_cs(target_ids);
-            }
+            redact_pipe(target_ids);
             break;
         } 
         case 2: {
-            size_t removed;
-            if constexpr (std::is_same_v<T, Pipe>) {
-                removed = gts.remove_pipes(target_ids);
-            } else {
-                removed = gts.remove_css(target_ids);
-            }
+            size_t removed = gts.remove_pipes(target_ids);
             std::cout << "Успешно удалено: " << removed << "\n";
             break;
         }
     }
 } 
 
+void Console::edit_batch(const std::unordered_map<int, Cs>& some_type_data) {
+    std::set<int> found_ids = search(some_type_data);
+    if (found_ids.empty()) {
+        return;
+    }
+
+    std::cout << "\nРезультаты поиска (" << found_ids.size() << " найдено):\n";
+    for (int id : found_ids) {
+        std::cout << "ID: " << id << "\n";
+        some_type_data.at(id).print();
+        std::cout << "---------------------\n";
+    }
+
+    std::cout << "\nПакетное редактирование с найденными объектами:\n";
+    std::cout << "1. Применить редактирование / изменение статуса\n";
+    std::cout << "2. Удалить\n";
+    std::cout << "0. Отмена\n";
+    std::cout << "Выберите действие: ";
+
+    int act = GetCorrectNumber(0, 2);
+    
+    if (act == 0) {
+        return;
+    }
+
+    std::cout << "\nПрименить к:\n";
+    std::cout << "1. Всем найденным объектам\n";
+    std::cout << "2. Выбранному подмножеству ID\n";
+    std::cout << "Выберите: ";
+
+    std::set<int> target_ids;
+    switch (GetCorrectNumber(1, 2)) {
+        case 1: {
+            target_ids = found_ids;
+            break;
+        }
+        case 2: {
+            target_ids = input_id(found_ids);
+            break;
+        }
+    }
+    if (target_ids.empty()) {
+        std::cout << "Список ID для обработки пуст.\n";
+        return;
+    }
+    switch (act) {
+        case 1: {
+            redact_cs(target_ids);
+            break;
+        } 
+        case 2: {
+            size_t removed = gts.remove_css(target_ids);
+            std::cout << "Успешно удалено: " << removed << "\n";
+            break;
+        }
+    }
+} 
 void Console::batch_edit_pipes() {
-    edit_p_batch<Pipe>();
+    edit_batch(gts.get_pipes());
 }
 
 void Console::batch_edit_stations() {
-    edit_p_batch<Cs>();
+    edit_batch(gts.get_css());
 }
